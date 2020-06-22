@@ -78,3 +78,28 @@ class ImageDataset(Dataset):
 
     def __len__(self):
         return min(len(self.files_A), len(self.files_B))
+
+
+class ImageDataset2(Dataset):
+    def __init__(self, root, transforms_=None, unaligned=False, mode='train'):
+        self.transform = transforms.Compose(transforms_)
+        self.unaligned = unaligned
+
+        self.files_A = sorted(glob.glob(os.path.join(root, '%sA' % mode) + '/*.*'))
+        self.files_B = sorted(glob.glob(os.path.join(root, '%sB' % mode) + '/*.*'))
+        self.files_C = sorted(glob.glob(os.path.join(root, '%sC' % mode) + '/*.*'))
+
+    def __getitem__(self, index):
+        if len(self.files_A) > len(self.files_B):
+            item_A = self.transform(Image.open(self.files_A[random.randint(0, len(self.files_A) - 1)]))
+            item_B = self.transform(Image.open(self.files_B[index % len(self.files_B)]))
+            item_C = self.transform(Image.open(self.files_C[random.randint(0, len(self.files_C) - 1)]))
+        else:
+            item_A = self.transform(Image.open(self.files_A[index % len(self.files_A)]))
+            item_B = self.transform(Image.open(self.files_B[random.randint(0, len(self.files_B) - 1)]))
+            item_C = self.transform(Image.open(self.files_C[random.randint(0, len(self.files_C) - 1)]))
+
+        return {'A': item_A, 'B': item_B, 'C': item_C}
+
+    def __len__(self):
+        return min(len(self.files_A), len(self.files_B), len(self.files_C))
